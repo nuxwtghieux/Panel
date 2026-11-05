@@ -1,0 +1,44 @@
+
+name: Build SNOW PANEL APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Extract project
+        run: |
+          unzip SnowPanel_GitHub_Actions.zip -d source
+          ls -la source/SnowPanel_Java
+
+      - name: Build APK
+        run: |
+          chmod +x source/SnowPanel_Java/gradlew
+          cd source/SnowPanel_Java
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SNOW-PANEL-debug-APK
+          path: source/SnowPanel_Java/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
