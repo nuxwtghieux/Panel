@@ -35,6 +35,7 @@ jobs:
         run: |
           unzip -q SnowPanel_GitHub_Actions.zip -d source
           test -f source/SnowPanel_Java/gradlew
+          sed -i 's/targetSdk 28/targetSdk 29/' source/SnowPanel_Java/app/build.gradle
 
       - name: Build APK
         run: |
