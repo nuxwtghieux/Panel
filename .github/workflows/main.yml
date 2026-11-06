@@ -12,28 +12,34 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - uses: android-actions/setup-android@v3
-
       - name: Install Android SDK
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses || true
+          "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0"
 
       - name: Extract project
         run: |
-          unzip SnowPanel_GitHub_Actions.zip -d source
-          ls -la source/SnowPanel_Java
+          unzip -q SnowPanel_GitHub_Actions.zip -d source
+          test -f source/SnowPanel_Java/gradlew
 
       - name: Build APK
         run: |
-          chmod +x source/SnowPanel_Java/gradlew
           cd source/SnowPanel_Java
+          chmod +x gradlew
           ./gradlew --no-daemon assembleDebug
 
       - name: Upload APK
@@ -42,3 +48,4 @@ jobs:
           name: SNOW-PANEL-debug-APK
           path: source/SnowPanel_Java/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+          retention-days: 7
